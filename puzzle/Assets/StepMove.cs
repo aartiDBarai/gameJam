@@ -14,7 +14,7 @@ public class StepMove : MonoBehaviour
     private string tagname = "";
     public Text text;
     public Text gameOverText;
-    private int moves = 9;
+    private int moves = 100;
 
     void Start()
     {
