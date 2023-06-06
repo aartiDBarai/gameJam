@@ -14,24 +14,36 @@ public class StepMove : MonoBehaviour
     private string tagname = "";
     public Text text;
     public Text gameOverText;
-    private int moves = 50;
+    private int moves = 9;
 
     void Start()
     {
+        //grid.transform.GetChild(7).gameObject.SetActive(false);
+        //grid.transform.GetChild(2).gameObject.SetActive(false);
+        //grid.transform.GetChild(12).gameObject.SetActive(false);
+        //grid.transform.GetChild(19).gameObject.SetActive(false);
         text.text = moves.ToString();
     }
 
     void Update()
     {
+        
+        
+        Collider[] allGameObjects = Physics.OverlapSphere(transform.position, 10f);
+        int nearestGridIndex = GetNearestChild(grid);
+        string direction = CheckDirection();
+
+        if (nearestChildGameObject.gameObject.name == "Cell (20)")
+        {
+            gameOverText.text = "Game Won";
+            return;
+        }
+        
         if (moves == 0)
         {
             gameOverText.text = "Game Over";
             return;
         }
-        
-        Collider[] allGameObjects = Physics.OverlapSphere(transform.position, 10f);
-        int nearestGridIndex = GetNearestChild(grid);
-        string direction = CheckDirection();
         
         if (!CanMove(tagname) && Input.GetKeyDown(KeyCode.Space) == false)
         {
@@ -229,11 +241,16 @@ public class StepMove : MonoBehaviour
 
             if (Vector3.Distance(transform.position, nearestDoor.transform.position) >
                 Vector3.Distance(transform.GetChild(0).position, nearestDoor.transform.position) &&
-                transform.GetChild(0).name != nearestDoor.transform.name)
+                ProcessName(transform.GetChild(0).name) != ProcessName(nearestDoor.transform.name))
                 return false;
         }
 
         return true;
+    }
+
+    private string ProcessName(string name)
+    {
+        return name.Split(" ")[0];
     }
 
     private int GetNearestChild(GameObject obj)
