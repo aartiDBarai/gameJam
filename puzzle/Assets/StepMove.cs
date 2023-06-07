@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class StepMove : MonoBehaviour
 {
@@ -14,7 +15,13 @@ public class StepMove : MonoBehaviour
     private string tagname = "";
     public Text text;
     public Text gameOverText;
-    private int moves = 99;
+    public int moves;
+    // The name of the scene to navigate to
+    public string levelChange;
+    public string lastCellName;
+    // The number of seconds to wait before changing scenes
+    private float waitTime = 2f;
+
 
     void Start()
     {
@@ -23,6 +30,7 @@ public class StepMove : MonoBehaviour
         //grid.transform.GetChild(12).gameObject.SetActive(false);
         //grid.transform.GetChild(19).gameObject.SetActive(false);
         text.text = moves.ToString();
+        waitTime = Time.time;
     }
 
     void Update()
@@ -33,9 +41,19 @@ public class StepMove : MonoBehaviour
         int nearestGridIndex = GetNearestChild(grid);
         string direction = CheckDirection();
 
-        if (nearestChildGameObject.gameObject.name == "Cell (20)")
+        
+
+        if (nearestChildGameObject.gameObject.name == lastCellName)
         {
             gameOverText.text = "Game Won";
+            
+            // Pause execution for 2 seconds
+            if(levelChange.Length > 0 && Time.time >= waitTime + 6f)
+            {
+                waitTime = Time.time;
+                SceneManager.LoadScene(levelChange);
+                
+            }
             return;
         }
         
@@ -45,7 +63,7 @@ public class StepMove : MonoBehaviour
             return;
         }
         
-        if (!CanMove(tagname) && Input.GetKeyDown(KeyCode.Space) == false)
+        if (Input.GetKeyDown(KeyCode.Space) == false && !CanMove(tagname))
         {
             
             return;
@@ -53,23 +71,23 @@ public class StepMove : MonoBehaviour
         
         if (direction == "Up")
         {
-            MoveUp();
-            moves--;
+            MoveUp(nearestGridIndex);
+            
         }
         else if (direction == "Down")
         {
-            MoveDown();
-            moves--;
+            MoveDown(nearestGridIndex);
+            
         }
         else if (direction == "Left")
         {
-            MoveLeft();
-            moves--;
+            MoveLeft(nearestGridIndex);
+            
         }
         else if (direction == "Right")
         {
-            MoveRight();
-            moves--;
+            MoveRight(nearestGridIndex);
+            
         }
         
         // Check if the spacebar is pressed
@@ -185,32 +203,48 @@ public class StepMove : MonoBehaviour
 
     }
 
-    private void MoveUp()
+    private void MoveUp(int nearestGridIndex)
     {
-        float y = 1.75f * 4;
+        float y = 1.75f * 20;
+        if (!CheckBounds(grid, nearestGridIndex ,
+                new Vector3(transform.position.x, transform.position.y + y, transform.position.z)))
+            return;
         transform.Translate(0, y, 0);
         transform.GetComponent<Collider2D>().enabled = true;
+        moves--;
     }
     
-    private void MoveDown()
+    private void MoveDown(int nearestGridIndex)
     {
-        float y = -1.75f * 4;
+        float y = -1.75f * 20;
+        if (!CheckBounds(grid, nearestGridIndex ,
+                new Vector3(transform.position.x, transform.position.y + y, transform.position.z)))
+            return;
         transform.Translate(0, y, 0);
         transform.GetComponent<Collider2D>().enabled = true;
+        moves--;
     }
     
-    private void MoveLeft()
+    private void MoveLeft(int nearestGridIndex)
     {
-        float x = -1.75f * 4;
+        float x = -1.75f * 20;
+        if (!CheckBounds(grid, nearestGridIndex ,
+                new Vector3(transform.position.x + x, transform.position.y, transform.position.z)))
+            return;
         transform.Translate(x, 0, 0);
         transform.GetComponent<Collider2D>().enabled = true;
+        moves--;
     }
     
-    private void MoveRight()
+    private void MoveRight(int nearestGridIndex)
     {
-        float x = 1.75f * 4;
+        float x = 1.75f * 20;
+        if (!CheckBounds(grid, nearestGridIndex ,
+                new Vector3(transform.position.x + x, transform.position.y, transform.position.z)))
+            return;
         transform.Translate(x, 0, 0);
         transform.GetComponent<Collider2D>().enabled = true;
+        moves--;
     }
 
     private bool CanMove(string direction)
@@ -243,6 +277,8 @@ public class StepMove : MonoBehaviour
                 Vector3.Distance(transform.GetChild(0).position, nearestDoor.transform.position) &&
                 ProcessName(transform.GetChild(0).name) != ProcessName(nearestDoor.transform.name))
                 return false;
+            
+            //Destroy(transform.GetChild(0).gameObject);
         }
 
         return true;
@@ -276,5 +312,29 @@ public class StepMove : MonoBehaviour
         }
 
         return index;
+    }
+    
+    private bool CheckBounds(GameObject obj, int nearestGridIndex, Vector3 nextPosition)
+    {
+        // Initialize the minimum distance
+        float minimumDistance = float.MaxValue;
+        int index = -1;
+
+        // For each child GameObject
+        for (int i=0; i<obj.transform.childCount; i++) {
+            // Get the distance between the child GameObject and the parent GameObject
+            float distance = Vector3.Distance(obj.transform.GetChild(i).transform.position, nextPosition);
+            
+            if (minimumDistance > distance)
+            {
+
+                minimumDistance = distance;
+                index = i;
+            }
+        }
+
+        if (index == nearestGridIndex)
+            return false;
+        return true;
     }
 }
