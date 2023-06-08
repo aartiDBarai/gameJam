@@ -95,7 +95,9 @@ public class StepMove : MonoBehaviour
             // Rotate the GameObject by 90 degrees on the Y axis
             //transform.RotateAround(transform.position, Vector3.right, 90f);
             
+            Debug.Log("old " + transform.position.x + " " + transform.position.y);
             transform.Rotate(0f, 0f, 90f);
+            Debug.Log("new " + transform.position.x + " " + transform.position.y);
             
             transform.GetComponent<Collider2D>().enabled = false;
             
@@ -206,8 +208,7 @@ public class StepMove : MonoBehaviour
     private void MoveUp(int nearestGridIndex)
     {
         float y = 1.75f * 20;
-        if (!CheckBounds(grid, nearestGridIndex ,
-                new Vector3(transform.position.x, transform.position.y + y, transform.position.z)))
+        if (!CheckBounds(grid, nearestGridIndex, 0, 1.75f))
             return;
         transform.Translate(0, y, 0);
         transform.GetComponent<Collider2D>().enabled = true;
@@ -217,9 +218,11 @@ public class StepMove : MonoBehaviour
     private void MoveDown(int nearestGridIndex)
     {
         float y = -1.75f * 20;
-        if (!CheckBounds(grid, nearestGridIndex ,
-                new Vector3(transform.position.x, transform.position.y + y, transform.position.z)))
+        if (!CheckBounds(grid, nearestGridIndex, 0, -1.75f))
+        {
+            Debug.Log("not down");
             return;
+        }
         transform.Translate(0, y, 0);
         transform.GetComponent<Collider2D>().enabled = true;
         moves--;
@@ -228,8 +231,7 @@ public class StepMove : MonoBehaviour
     private void MoveLeft(int nearestGridIndex)
     {
         float x = -1.75f * 20;
-        if (!CheckBounds(grid, nearestGridIndex ,
-                new Vector3(transform.position.x + x, transform.position.y, transform.position.z)))
+        if (!CheckBounds(grid, nearestGridIndex, -1.75f, 0))
             return;
         transform.Translate(x, 0, 0);
         transform.GetComponent<Collider2D>().enabled = true;
@@ -239,8 +241,7 @@ public class StepMove : MonoBehaviour
     private void MoveRight(int nearestGridIndex)
     {
         float x = 1.75f * 20;
-        if (!CheckBounds(grid, nearestGridIndex ,
-                new Vector3(transform.position.x + x, transform.position.y, transform.position.z)))
+        if (!CheckBounds(grid, nearestGridIndex, 1.75f, 0))
             return;
         transform.Translate(x, 0, 0);
         transform.GetComponent<Collider2D>().enabled = true;
@@ -314,27 +315,59 @@ public class StepMove : MonoBehaviour
         return index;
     }
     
-    private bool CheckBounds(GameObject obj, int nearestGridIndex, Vector3 nextPosition)
+    private bool CheckBounds(GameObject obj, int nearestGridIndex, float x, float y)
     {
-        // Initialize the minimum distance
-        float minimumDistance = float.MaxValue;
-        int index = -1;
-
+        
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            x = 0;
+            y = 1.75f;
+        }
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            x = 0;
+            y = -1.75f;
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            x = -1.75f;
+            y = 0;
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            x = 1.75f;
+            y = 0;
+        }
+        
+        Vector3 newPos = new Vector3(transform.localPosition.x + x, transform.localPosition.y + y, transform.localPosition.z);
+        
         // For each child GameObject
         for (int i=0; i<obj.transform.childCount; i++) {
-            // Get the distance between the child GameObject and the parent GameObject
-            float distance = Vector3.Distance(obj.transform.GetChild(i).transform.position, nextPosition);
             
-            if (minimumDistance > distance)
+            //Bounds bounds = obj.transform.GetChild(i).GetComponent<Renderer>().bounds;
+            // Extract the X and Y components of the bounds
+            //float minX = bounds.min.x;
+            //float maxX = bounds.max.x;
+            //float minY = bounds.min.y;
+            //float maxY = bounds.max.y;
+
+            float minX = obj.transform.GetChild(i).localPosition.x - 0.875f;
+            float maxX = obj.transform.GetChild(i).localPosition.x + 0.875f;
+            
+            float minY = obj.transform.GetChild(i).localPosition.y - 0.875f;
+            float maxY = obj.transform.GetChild(i).localPosition.y + 0.875f;
+            
+            Debug.Log(obj.transform.GetChild(i).name + " " + minX + " " + maxX + " " + minY + " " + maxY);
+            Debug.Log(newPos.x + " " + newPos.y);
+            
+            if (newPos.x >= minX && newPos.x <= maxX &&
+                newPos.y >= minY && newPos.y <= maxY)
             {
-
-                minimumDistance = distance;
-                index = i;
+                return true;
             }
+            
         }
-
-        if (index == nearestGridIndex)
-            return false;
-        return true;
+        
+        return false;
     }
 }
