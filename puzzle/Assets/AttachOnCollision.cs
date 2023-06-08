@@ -43,8 +43,12 @@ public class AttachOnCollision : MonoBehaviour
             Destroy(transform.GetChild(0).gameObject);
             
         }
+
+        //Vector3 temp = transform.position;
         // Attach the other object to this object
         otherObject.transform.parent = transform;
+
+        //transform.position = temp;
         
         
         
